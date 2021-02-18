@@ -9,19 +9,24 @@ import * as React from 'react'
 
 */
 function useLocalStorage(key, defaultValue = '') {
-  const [state, setState] = React.useState(
-    () => window.localStorage.getItem(key) || defaultValue,
-  )
-  console.log(state)
+  const [state, setState] = React.useState(() => {
+    console.log('useState render')
+    const valueInLocalStorage = window.localStorage.getItem(key)
+    if (valueInLocalStorage) {
+      return JSON.parse(valueInLocalStorage) // All values are stringified, so we can grab the value in localStorage
+      // and parse the value to get the proper data-type.
+    }
+    return defaultValue
+  })
+
   React.useEffect(() => {
     console.log('calling useEffect render')
-    // no need to update localStorage if the name doesn't change.
-    window.localStorage.setItem(key, state)
+    window.localStorage.setItem(key, JSON.stringify(state))
   }, [state, key])
   return [state, setState]
 }
 function Greeting({initialName = ''}) {
-  console.log('rendered')
+  console.log('Greeting render')
   const [name, setName] = useLocalStorage('name', initialName)
   function handleChange(event) {
     setName(event.target.value)
