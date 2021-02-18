@@ -22,8 +22,11 @@ function Greeting({initialName = ''}) {
 
   React.useEffect(() => {
     console.log('calling useEffect render')
+    // no need to update localStorage if the name doesn't change.
     window.localStorage.setItem('name', name)
-  }, [name, 'name'])
+  }, [name, 'name']) // dependency array only re-renders useEffect when the listed
+  // dependencies are updated.
+  // React does a shallow comparasion, so object A and B will always re-render.
 
   function handleChange(event) {
     setName(event.target.value)
