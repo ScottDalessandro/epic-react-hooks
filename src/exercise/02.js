@@ -8,22 +8,31 @@ import * as React from 'react'
   - What makes a custom hook a CH is that they use other hooks within the function, such as useState and useEffect
 
 */
-function useLocalStorage(key, defaultValue = '') {
+function useLocalStorage(
+  key,
+  defaultValue = '',
+  {serialize = JSON.stringify, deserialize = JSON.parse} = {},
+) {
   const [state, setState] = React.useState(() => {
-    console.log('useState render')
     const valueInLocalStorage = window.localStorage.getItem(key)
     if (valueInLocalStorage) {
-      return JSON.parse(valueInLocalStorage) // All values are stringified, so we can grab the value in localStorage
+      return deserialize(valueInLocalStorage) // All values are stringified, so we can grab the value in localStorage
       // and parse the value to get the proper data-type.
     }
-    return defaultValue
+    // this allows a function to be passed as the defaultValue. This is advantageous in the event a value
+    // is comp. expensive.
+    return typeof defaultValue === 'function' ? defaultValue() : defaultValue
   })
 
+  const prevKeyRef = React.useRef(key) // provides an object that can be mutated without triggering a re-render.
   React.useEffect(() => {
-    console.log('calling useEffect render')
-    window.localStorage.setItem(key, JSON.stringify(state))
+    const prevKey = prevKeyRef.current
+    if (prevKey !== key) {
+      window.localStorage.removeItem(prevKey)
+    }
+    window.localStorage.setItem(key, serialize(state))
   }, [state, key])
-  return [state, setState]
+  return [state, setState, serialize]
 }
 function Greeting({initialName = ''}) {
   console.log('Greeting render')
